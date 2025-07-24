@@ -11,6 +11,7 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { Like } from 'src/like/entities/like.entity';
 import { Follow } from 'src/follow/entities/follow.entity';
 import { ChatRoom } from 'src/chat/entities/chat-room.entity';
+import { UserRole } from '../user-role.enum';
 
 @Entity()
 export class User {
@@ -40,6 +41,13 @@ export class User {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @Column({
+        type: 'enum',
+        enum: UserRole,
+        default: UserRole.USER,
+    })
+    role: UserRole;
 
     // Relationships
     @OneToMany(() => Post, post => post.author)
