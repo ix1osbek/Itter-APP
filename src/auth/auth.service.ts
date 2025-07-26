@@ -1,39 +1,67 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class AuthService {
     constructor(@InjectRepository(User)
-    private readonly userRepo: Repository<User>
+    private readonly userRepo: Repository<User>,
+        private readonly emailService: EmailService
     ) { }
 
     //////////// register
     async register(createAuthDto: CreateAuthDto) {
-        const { email, password, username } = createAuthDto
         try {
-            const existingUser = await this.userRepo.findOne({ where: { email } })
+            const { email, password , username } = createAuthDto;
+            const existingUser = await this.userRepo.findOne({ where: { email } });
 
-            if (existingUser) {
-                throw new ConflictException('Foydalanuvchi bazamizda allaqachon mavjud. Iltimos Login qiling');
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const now = new Date();
+
+            if (existingUser && !existingUser.isVerified) {
+                const diffMs = now.getTime() - new Date(existingUser.otpTime).getTime();
+                const diffMinutes = diffMs / (1000 * 60);
+
+                if (diffMinutes >= 2) {
+                    existingUser.password = hashedPassword;
+                    existingUser.otp = otp;
+                    existingUser.otpTime = now;
+                    await this.userRepo.save(existingUser);
+                    await this.emailService.sendEmailOtp(email, otp);
+                    return { message: "Yangi tasdiqlash kodingiz emailingizga yuborildi!" };
+                }
+                throw new ConflictException("Iltimos, 2 daqiqa kutib qayta urinib ko‘ring!");
             }
-            const hashedPassword = bcrypt.hash(password, 10)
+            if (existingUser && existingUser.isVerified) {
+                throw new ConflictException("Bu email bilan foydalanuvchi mavjud!");
+            }
+        
 
-            const newUser = {
-                email: email,
-                password: hashedPassword,
+            const newUser = this.userRepo.create({
                 username: username,
+                email,
+                password: hashedPassword,
+                otp,
+                otpTime: now,
+            });
 
-            }
-
+            console.log(newUser);
+            
+            await this.userRepo.save(newUser);
+            await this.emailService.sendEmailOtp(email, otp);
+            return { message: "Iltimos emailingizga yuborilgan kodni kiriting!" };
         } catch (error) {
-
+            if (error instanceof ConflictException) throw error;
+            throw new InternalServerErrorException('Serverda xato yuz berdi');
         }
     }
+
 
 
 
