@@ -14,6 +14,7 @@ import { Follow } from './follow/entities/follow.entity';
 import { Like } from './like/entities/like.entity';
 import { Post } from './post/entities/post.entity';
 import { User } from './user/entities/user.entity';
+import { EmailModule } from './email/email.module';
 
 @Module({
     imports: [
@@ -28,7 +29,7 @@ import { User } from './user/entities/user.entity';
             entities: [ChatRoom, Comment, Follow, Like, Post, User],
             synchronize: true
         }),
-        UserModule, AuthModule, PostModule, CommentModule, LikeModule, FollowModule, ChatModule],
+        UserModule, AuthModule, PostModule, CommentModule, LikeModule, FollowModule, ChatModule, EmailModule],
     controllers: [],
     providers: [],
 })

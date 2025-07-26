@@ -36,11 +36,6 @@ export class User {
     @Column({ nullable: true })
     avatarUrl: string;
 
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
 
     @Column({
         type: 'enum',
@@ -49,6 +44,21 @@ export class User {
     })
     role: UserRole;
 
+
+    @Column({ default: false })
+    isVerified: boolean;
+
+    @Column({ nullable: true })
+    otp: string;
+
+    @Column({ nullable: true, type: 'timestamp' })
+    otpTime: Date;
+
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @UpdateDateColumn()
+    updatedAt: Date;
     // Relationships
     @OneToMany(() => Post, post => post.author)
     posts: Post[];
