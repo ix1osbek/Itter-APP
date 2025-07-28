@@ -27,7 +27,8 @@ import { EmailModule } from './email/email.module';
             password: process.env.DB_PASSWORD,
             database: 'itter',
             entities: [ChatRoom, Comment, Follow, Like, Post, User],
-            synchronize: true
+            synchronize: true,
+            dropSchema: false    /////// dev holatda ishlatamiz
         }),
         UserModule, AuthModule, PostModule, CommentModule, LikeModule, FollowModule, ChatModule, EmailModule],
     controllers: [],

@@ -17,8 +17,8 @@ export class AuthService {
     //////////// register
     async register(createAuthDto: CreateAuthDto) {
         try {
-            const { email, password , username } = createAuthDto;
-            const existingUser = await this.userRepo.findOne({ where: { email } });
+            const { email, password, username } = createAuthDto;
+            const existingUser = await this.userRepo.findOne({ where: { email } })
 
             const hashedPassword = await bcrypt.hash(password, 10);
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -38,10 +38,12 @@ export class AuthService {
                 }
                 throw new ConflictException("Iltimos, 2 daqiqa kutib qayta urinib ko‘ring!");
             }
+
+
             if (existingUser && existingUser.isVerified) {
-                throw new ConflictException("Bu email bilan foydalanuvchi mavjud!");
+                throw new ConflictException("Bu foydalanuvchi bazamizda mavjud!");
             }
-        
+
 
             const newUser = this.userRepo.create({
                 username: username,
@@ -49,15 +51,18 @@ export class AuthService {
                 password: hashedPassword,
                 otp,
                 otpTime: now,
-            });
+            })
 
-            console.log(newUser);
-            
             await this.userRepo.save(newUser);
             await this.emailService.sendEmailOtp(email, otp);
             return { message: "Iltimos emailingizga yuborilgan kodni kiriting!" };
         } catch (error) {
             if (error instanceof ConflictException) throw error;
+
+            if (error.code === '23505') {
+                throw new ConflictException("Bu email allaqachon ro‘yxatdan o‘tgan!");
+            }
+
             throw new InternalServerErrorException('Serverda xato yuz berdi');
         }
     }
