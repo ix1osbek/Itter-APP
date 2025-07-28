@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { verifyOtpDto } from './dto/verify_otp.dto';
 
 @Controller('api/auth')
 export class AuthController {
@@ -12,15 +13,16 @@ export class AuthController {
     @ApiOperation({ summary: 'Foydalanuvchini ro‘yxatdan o‘tkazish' })
     @ApiResponse({ status: 201, description: 'Foydalanuvchi yaratildi' })
     @ApiResponse({ status: 409, description: 'Email allaqachon ro‘yxatda bor' })
-    @ApiResponse({status:500 , description: 'Serverda xatolik yuz berdi.'})
+    @ApiResponse({ status: 500, description: 'Serverda xatolik yuz berdi.' })
     async register(@Body() createAuthDto: CreateAuthDto) {
         await this.authService.register(createAuthDto);
         return { message: "Iltimos emailingizga yuborilgan kodni kiriting!" };
     }
 
-    @Get()
-    findAll() {
-        return this.authService.findAll();
+    @Post('verify_otp')
+    async findAll(@Body() iOTP_dto: verifyOtpDto) {
+        await this.authService.verifyOtp(iOTP_dto);
+        return { message: 'Emailingiz tasdiqlandi. Login qilishingiz mumkin!' }
     }
 
     @Get(':id')

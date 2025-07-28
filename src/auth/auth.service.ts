@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +6,7 @@ import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { EmailService } from 'src/email/email.service';
+import { verifyOtpDto } from './dto/verify_otp.dto';
 
 @Injectable()
 export class AuthService {
@@ -67,11 +68,35 @@ export class AuthService {
         }
     }
 
+    ///////////////////// verify otp
+
+    async verifyOtp(iOTP_Dto: verifyOtpDto) {
+        const { email, otp } = iOTP_Dto
+        try {
+            const foundetUser = await this.userRepo.findOne({ where: { email: email } })
+
+            if (!foundetUser) {
+                throw new NotFoundException('Foydalanuvchi topilmadi!')
+            }
+
+            const otpTime = foundetUser.otpTime;
+            const currentTime = new Date();
+            const timeDifference = (currentTime.getTime() - otpTime.getTime())
+            if (timeDifference > 2 * 60 * 1000) {
+                throw new ConflictException("OTP muddati tugagan!");
+            }
 
 
+            foundetUser.isVerified = true
+            foundetUser.otp = ''
+            foundetUser.otpTime = new Date(0)
+            await this.userRepo.save(foundetUser)
+            return { message: "Sizning emailingiz tasdiqlandi. Login qilishingiz mumkin!" }
+        } catch (error) {
+            if (error instanceof ConflictException || error instanceof NotFoundException) throw error
 
-    findAll() {
-        return `This action returns all auth`;
+            throw new InternalServerErrorException('Serverda xatolik yuz berdi!')
+        }
     }
 
     findOne(id: number) {
