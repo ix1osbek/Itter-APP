@@ -1,34 +1,46 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { UserService } from './user.service'
+import { UpdateProfileDto } from './dto/update-user.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { User } from './entities/user.entity';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-@Controller('user')
+@Controller('api/user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+    constructor(private readonly userService: UserService) { }
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
-  }
+    @UseGuards(AuthGuard('jwt'))
+    @Patch('profile-update')
+    @ApiOperation({ summary: 'Profilni tahrirlash' })
+    @ApiResponse({ status: 201, description: 'profil tahrirlandi!' })
+    @ApiResponse({ status: 401, description: "Mumkin bo'lmagan buyruq!" })
+    @ApiResponse({ status: 404, description: "Foydalanuvchi topilmadi!" })
+    @ApiResponse({ status: 500, description: 'Serverda xatolik yuz berdi.' })
+    updateProfile(
+        @CurrentUser() user: User,
+        @Body() updateDto: UpdateProfileDto,
+    ): Promise<User> {
+        return this.userService.updateProfile(user.id, updateDto);
+    }
 
-  @Get()
-  findAll() {
-    return this.userService.findAll();
-  }
+    @Get()
+    findAll() {
+        return this.userService.findAll();
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
-  }
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.userService.findOne(+id);
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
+    @Patch(':id')
+    update(@Param('id') id: string, @Body() UpdateProfileDto: UpdateProfileDto) {
+        return this.userService.update(+id, UpdateProfileDto);
+    }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
-  }
+    @Delete(':id')
+    remove(@Param('id') id: string) {
+        return this.userService.remove(+id);
+    }
 }

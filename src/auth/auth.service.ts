@@ -23,7 +23,7 @@ export class AuthService {
     //////////// register
     async register(createAuthDto: CreateAuthDto) {
         try {
-            const { email, password, username } = createAuthDto;
+            const { email, password, username, fullName } = createAuthDto;
             const existingUser = await this.userRepo.findOne({ where: { email } })
 
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -54,6 +54,7 @@ export class AuthService {
             const newUser = this.userRepo.create({
                 username: username,
                 email,
+                fullName,
                 password: hashedPassword,
                 otp,
                 otpTime: now,

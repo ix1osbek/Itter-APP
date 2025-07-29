@@ -29,14 +29,17 @@ export class User {
 
     @Column({ nullable: true })
     fullName: string;
-    
-    @Column({ nullable: true })
+
+    @Column({ nullable: true, type: "text" })
     content: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: "text" })
     bio: string;
 
-    @Column({ nullable: true })
+    @Column({
+        nullable: true,
+        default: 'https://cdn0.iconfinder.com/data/icons/instagram-ui-1/24/Instagram-UI_profile-512.png'
+    })
     avatarUrl: string;
 
     @Column({

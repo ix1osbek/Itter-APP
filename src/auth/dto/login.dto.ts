@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class AuthLoginDto {
     @ApiProperty({ example: "bekerkinov2004@gmail.com", required: true })
@@ -16,5 +16,8 @@ export class AuthLoginDto {
     @IsNotEmpty({ message: "Iltimos password maydonini to'ldiring!" })
     @MinLength(8, { message: "Iltimos kiritlgan password 8 ta belgidan ko'p bo'lsin!" })
     @MaxLength(40, { message: "Iltimos password 40 ta belgidan kam bo'lsin!" })
+    @Matches(/^[\p{L}\p{N}\s'-]+$/u, {
+        message: 'password faqat harflar, sonlar va oddiy belgilarni o‘z ichiga olishi mumkin',
+    })
     password: string;
 }
