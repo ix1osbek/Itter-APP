@@ -1,7 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { CreateAuthDto } from './dto/create-auth.dto'
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { verifyOtpDto } from './dto/verify_otp.dto';
 import { Request, Response } from 'express';
