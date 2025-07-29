@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,12 +7,16 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { EmailService } from 'src/email/email.service';
 import { verifyOtpDto } from './dto/verify_otp.dto';
+import { AuthLoginDto } from './dto/login.dto';
+import { JwtService } from '@nestjs/jwt';
+import { Request, Response } from 'express';
 
 @Injectable()
 export class AuthService {
     constructor(@InjectRepository(User)
     private readonly userRepo: Repository<User>,
-        private readonly emailService: EmailService
+        private readonly emailService: EmailService,
+        private readonly jwtService: JwtService
     ) { }
 
     //////////// register
@@ -99,8 +103,57 @@ export class AuthService {
         }
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} auth`;
+    async login(logindto: AuthLoginDto, res: Response) {
+        const { email, password } = logindto
+        try {
+            const user = await this.userRepo.findOne({ where: { email } })
+
+            if (!user) {
+                throw new NotFoundException(`${email} siz ro'yxatdan o'tmagansiz.`)
+            }
+
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
+                throw new UnauthorizedException('Kiritilgan parol xato!');
+            }
+
+            if (!user.isVerified) {
+                throw new UnauthorizedException('Email manzili tasdiqlanmagan!')
+            }
+            const payload = { id: user.id, email: user.email, role: user.role }
+            const accessToken = this.jwtService.sign(payload, {
+                secret: process.env.JWT_ACCESS_SECRET,
+                expiresIn: '15m',
+            })
+
+            const refreshToken = this.jwtService.sign(payload, {
+                secret: process.env.JWT_REFRESH_SECRET,
+                expiresIn: '7d',
+            })
+
+            //////////// Refresh tokenni cookiega saqlash
+            res.cookie("refresh_token", refreshToken, {
+                httpOnly: true,
+                secure: false, // HTTPSda true
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+                path: '/',
+            })
+            return {
+                accessToken,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role
+                }
+            }
+        } catch (error) {
+            if (error instanceof UnauthorizedException || NotFoundException) throw error
+            console.log(error.message);
+
+            throw new InternalServerErrorException('Serverda xato yuz berdi');
+
+        }
     }
 
     update(id: number, updateAuthDto: UpdateAuthDto) {

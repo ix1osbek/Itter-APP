@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { verifyOtpDto } from './dto/verify_otp.dto';
+import { Response } from 'express';
+import { AuthLoginDto } from './dto/login.dto';
 
 @Controller('api/auth')
 export class AuthController {
@@ -25,9 +27,14 @@ export class AuthController {
         return { message: 'Emailingiz tasdiqlandi. Login qilishingiz mumkin!' }
     }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.authService.findOne(+id);
+    @Post("login")
+    @ApiOperation({ summary: "Foydalanuvchini tizimga kirishi" })
+    @ApiResponse({ status: 200, description: 'Foydalanuvchi tizimga kirdi' })
+    @ApiResponse({ status: 401, description: 'Noto‘g‘ri email yoki parol' })
+    @ApiResponse({ status: 404, description: 'Foydalanuvchi topilmadi' })
+    @ApiResponse({ status: 500, description: 'Serverda xato yuz berdi' })
+    async login(@Body() dto: AuthLoginDto, @Res({ passthrough: true }) res: Response) {
+        return this.authService.login(dto, res)
     }
 
     @Patch(':id')
