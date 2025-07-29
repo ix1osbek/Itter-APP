@@ -28,8 +28,10 @@ export class User {
     password: string;
 
     @Column({ nullable: true })
-    content: string;
     fullName: string;
+    
+    @Column({ nullable: true })
+    content: string;
 
     @Column({ nullable: true })
     bio: string;
@@ -37,14 +39,12 @@ export class User {
     @Column({ nullable: true })
     avatarUrl: string;
 
-
     @Column({
         type: 'enum',
         enum: UserRole,
         default: UserRole.USER,
     })
     role: UserRole;
-
 
     @Column({ default: false })
     isVerified: boolean;
@@ -60,8 +60,9 @@ export class User {
 
     @UpdateDateColumn()
     updatedAt: Date;
-    
+
     // Relationships
+
     @OneToMany(() => Post, post => post.author)
     posts: Post[];
 
