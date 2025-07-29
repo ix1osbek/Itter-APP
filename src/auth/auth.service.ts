@@ -156,9 +156,29 @@ export class AuthService {
         }
     }
 
-    update(id: number, updateAuthDto: UpdateAuthDto) {
-        return `This action updates a #${id} auth`;
+    //////////// refresh token
+    async refreshToken(req: Request) {
+        const token = req.cookies['refresh_token'];
+        if (!token) throw new UnauthorizedException('Refresh token topilmadi!');
+
+        try {
+            const payload = this.jwtService.verify(token, {
+                secret: process.env.JWT_REFRESH_SECRET,
+            });
+
+            const newAccessToken = this.jwtService.sign(
+                { id: payload.id, email: payload.email, role: payload.role },
+                {
+                    secret: process.env.JWT_ACCESS_SECRET,
+                    expiresIn: '15m',
+                });
+
+            return { accessToken: newAccessToken };
+        } catch (error) {
+            throw new UnauthorizedException('Refresh token yaroqsiz!');
+        }
     }
+
 
     remove(id: number) {
         return `This action removes a #${id} auth`;

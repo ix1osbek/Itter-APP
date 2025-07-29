@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { verifyOtpDto } from './dto/verify_otp.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthLoginDto } from './dto/login.dto';
 
 @Controller('api/auth')
@@ -22,6 +22,11 @@ export class AuthController {
     }
 
     @Post('verify_otp')
+    @ApiOperation({ summary: "Foydalanuvchini emailini tasdiqlashi!" })
+    @ApiResponse({ status: 200, description: 'Foydalanuvchi emaili tasdiqlandi!' })
+    @ApiResponse({ status: 401, description: 'Noto‘g‘ri email yoki parol' })
+    @ApiResponse({ status: 404, description: 'Foydalanuvchi topilmadi' })
+    @ApiResponse({ status: 500, description: 'Serverda xato yuz berdi' })
     async findAll(@Body() iOTP_dto: verifyOtpDto) {
         await this.authService.verifyOtp(iOTP_dto);
         return { message: 'Emailingiz tasdiqlandi. Login qilishingiz mumkin!' }
@@ -37,9 +42,13 @@ export class AuthController {
         return this.authService.login(dto, res)
     }
 
-    @Patch(':id')
-    update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-        return this.authService.update(+id, updateAuthDto);
+    @Post("refresh")
+    @ApiOperation({ summary: 'Tokenni yangilash' })
+    @ApiResponse({ status: 200, description: 'Token yangilandi' })
+    @ApiResponse({ status: 401, description: 'Token noto‘g‘ri' })
+    @ApiResponse({ status: 500, description: 'Serverda xato yuz berdi' })
+    async refresh(@Req() req: Request) {
+        return this.authService.refreshToken(req);
     }
 
     @Delete(':id')
