@@ -10,6 +10,8 @@ import { verifyOtpDto } from './dto/verify_otp.dto';
 import { AuthLoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
+import { SendResetDto } from './dto/send-reset.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -179,8 +181,52 @@ export class AuthService {
         }
     }
 
+    ////////////////// reset password
+    async sendResetCode(sendResetDto: SendResetDto) {
+        try {
+            const { email } = sendResetDto;
+            const user = await this.userRepo.findOne({ where: { email } });
+            if (!user) {
+                throw new NotFoundException("Bunday email bilan foydalanuvchi topilmadi!");
+            }
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            user.otp = otp;
+            user.otpTime = new Date();
+            await this.userRepo.save(user);
+            await this.emailService.sendEmailOtp(email, otp);
+            return { message: 'Emailga tiklash kodi yuborildi.' };
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error;
+            throw new InternalServerErrorException('Serverda xato yuz berdi');
+        }
+    }
 
-    remove(id: number) {
-        return `This action removes a #${id} auth`;
+
+    ///////////////////////// reset password
+    async resetPassword(resetDto: ResetPasswordDto) {
+        const { email, otp, newPassword } = resetDto;
+        try {
+            const user = await this.userRepo.findOne({ where: { email } });
+            if (!user) {
+                throw new NotFoundException("Foydalanuvchi topilmadi!");
+            }
+            if (user.otp !== otp) {
+                throw new UnauthorizedException("Noto‘g‘ri OTP kiritildi!");
+            }
+            const otpTime = user.otpTime;
+            const now = new Date()
+            const diff = now.getTime() - otpTime.getTime()
+            if (diff > 2 * 60 * 1000) {
+                throw new UnauthorizedException("OTP kodi muddati tugagan!");
+            }
+            user.password = await bcrypt.hash(newPassword, 10);
+            user.otp = '';
+            user.otpTime = new Date(0);
+            await this.userRepo.save(user)
+            return { message: "Parol muvaffaqiyatli yangilandi!" }
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error;
+            throw new InternalServerErrorException('Serverda xato yuz berdi')
+        }
     }
 }

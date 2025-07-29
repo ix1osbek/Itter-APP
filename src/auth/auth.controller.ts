@@ -6,6 +6,8 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { verifyOtpDto } from './dto/verify_otp.dto';
 import { Request, Response } from 'express';
 import { AuthLoginDto } from './dto/login.dto';
+import { SendResetDto } from './dto/send-reset.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('api/auth')
 export class AuthController {
@@ -51,8 +53,38 @@ export class AuthController {
         return this.authService.refreshToken(req);
     }
 
-    @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.authService.remove(+id);
+    @Post('logout')
+    @ApiOperation({ summary: 'Foydalanuvchini tizimdan chiqishi' })
+    @ApiResponse({ status: 200, description: 'Foydalanuvchi tizimdan chiqdi' })
+    @ApiResponse({ status: 500, description: 'Serverda xato yuz berdi' })
+    async logout(@Res({ passthrough: true }) res: Response) {
+        res.clearCookie('refresh_token', {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'strict',
+            path: '/',
+        });
+
+        return { message: 'Tizimdan chiqildi' };
+    }
+
+
+    @Post('forgot_password')
+    @ApiOperation({ summary: 'Parolni tiklash uchun kod yuborish' })
+    @ApiResponse({ status: 200, description: 'Parolni tiklash uchun kod yuborildi' })
+    @ApiResponse({ status: 404, description: 'Foydalanuvchi topilmadi' })
+    @ApiResponse({ status: 500, description: 'Serverda xato yuz berdi' })
+    async sendResetCode(@Body() dto: SendResetDto) {
+        return this.authService.sendResetCode(dto)
+    }
+
+
+    @Post('reset_password')
+    @ApiOperation({ summary: 'Parolni tiklash' })
+    @ApiResponse({ status: 200, description: 'Parol muvaffaqiyatli tiklandi' })
+    @ApiResponse({ status: 404, description: 'Foydalanuvchi topilmadi' })
+    @ApiResponse({ status: 500, description: 'Serverda xato yuz berdi' })
+    async resetPassword(@Body() dto: ResetPasswordDto) {
+        return this.authService.resetPassword(dto)
     }
 }
