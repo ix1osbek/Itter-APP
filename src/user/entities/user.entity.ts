@@ -28,6 +28,7 @@ export class User {
     password: string;
 
     @Column({ nullable: true })
+    content: string;
     fullName: string;
 
     @Column({ nullable: true })

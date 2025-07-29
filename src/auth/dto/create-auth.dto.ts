@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from "class-validator";
 
 
 export class CreateAuthDto {
@@ -8,6 +8,9 @@ export class CreateAuthDto {
     @IsString({ message: "Kiritilgan username string ko'rinishida bo'lishi shart!" })
     @MinLength(3, { message: "Iltimos kiritlgan username 3 ta belgidan ko'p bo'lsin!" })
     @MaxLength(30, { message: "Iltimos username 30 ta belgidan kam bo'lsin!" })
+    @Matches(/^[a-zA-Z0-9_]+$/, {
+        message: 'Username faqat harf, raqam va _ belgidan iborat bo‘lishi kerak',
+    })
     username: string
 
     @ApiProperty({ example: "bekerkinov2004@gmail.com", required: true })
