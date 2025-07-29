@@ -60,6 +60,7 @@ export class User {
 
     @UpdateDateColumn()
     updatedAt: Date;
+    
     // Relationships
     @OneToMany(() => Post, post => post.author)
     posts: Post[];
