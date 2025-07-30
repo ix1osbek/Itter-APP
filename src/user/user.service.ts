@@ -38,8 +38,31 @@ export class UserService {
         }
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} user`;
+    async getMe(userId: string) {
+        try {
+            const user = await this.userRepo.findOne({
+                where: { id: userId },
+                relations: ['followers', 'following', 'posts'],
+            });
+
+            if (!user) throw new NotFoundException('Foydalanuvchi topilmadi');
+
+            return {
+                id: user.id,
+                username: user.username,
+                fullName: user.fullName,
+                bio: user.bio,
+                avatarUrl: user.avatarUrl,
+                followersCount: user.followers?.length || 0,
+                followingCount: user.following?.length || 0,
+                postsCount: user.posts?.length || 0,
+                isVerified: user.isVerified,
+                createdAt: user.createdAt,
+            };
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error
+            throw new InternalServerErrorException('Serverda xatolik yuz berdi!')
+        }
     }
 
     update(id: number, updateProfileDto: UpdateProfileDto) {

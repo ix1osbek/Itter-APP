@@ -30,12 +30,17 @@ export class UserController {
     @ApiResponse({ status: 404, description: "Foydalanuvchilar topilmadi!" })
     @ApiResponse({ status: 500, description: 'Serverda xatolik yuz berdi.' })
     async findAll() {
-        return this.userService.findAll();
+        return this.userService.findAll()
     }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.userService.findOne(+id);
+
+    @Get('profil/:id')
+    @ApiOperation({ summary: 'Foydalanuvchi ozining profilini korishi!' })
+    @ApiResponse({ status: 200, description: 'Profil muvofaqiyatli topildi' })
+    @ApiResponse({ status: 404, description: "profil topilmadi!" })
+    @ApiResponse({ status: 500, description: 'Serverda xatolik yuz berdi.' })
+    findOne(@Param('id') userId: string) {
+        return this.userService.getMe(userId);
     }
 
     @Patch(':id')
