@@ -2,14 +2,12 @@ import { Injectable, InternalServerErrorException, NotFoundException } from '@ne
 import { UpdateProfileDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
+import { Repository } from 'typeorm'
 
 @Injectable()
 export class UserService {
     constructor(@InjectRepository(User)
     private readonly userRepo: Repository<User>,
-        private readonly jwtService: JwtService
     ) { }
 
     async updateProfile(userId: string, dto: UpdateProfileDto): Promise<User> {
@@ -26,9 +24,18 @@ export class UserService {
         }
     }
 
+    /////////////////   all users
+    async findAll() {
+        try {
+            const allUsers = await this.userRepo.find()
 
-    findAll() {
-        return `This action returns all user`;
+            if (!allUsers || allUsers.length === 0) throw new NotFoundException("Foydalanuvchilar topilmadi")
+
+            return allUsers
+        } catch (error) {
+            if (error instanceof NotFoundException) throw error
+            throw new InternalServerErrorException('Serverda xato yuz berdi')
+        }
     }
 
     findOne(id: number) {

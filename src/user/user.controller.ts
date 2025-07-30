@@ -17,15 +17,19 @@ export class UserController {
     @ApiResponse({ status: 401, description: "Mumkin bo'lmagan buyruq!" })
     @ApiResponse({ status: 404, description: "Foydalanuvchi topilmadi!" })
     @ApiResponse({ status: 500, description: 'Serverda xatolik yuz berdi.' })
-    updateProfile(
+    async updateProfile(
         @CurrentUser() user: User,
         @Body() updateDto: UpdateProfileDto,
     ): Promise<User> {
         return this.userService.updateProfile(user.id, updateDto);
     }
 
-    @Get()
-    findAll() {
+    @Get('all')
+    @ApiOperation({ summary: 'Barcha foydalanuvchilarni olish!' })
+    @ApiResponse({ status: 200, description: 'Barcha foydalanuvchilar muvofaqiyatli topildi' })
+    @ApiResponse({ status: 404, description: "Foydalanuvchilar topilmadi!" })
+    @ApiResponse({ status: 500, description: 'Serverda xatolik yuz berdi.' })
+    async findAll() {
         return this.userService.findAll();
     }
 
